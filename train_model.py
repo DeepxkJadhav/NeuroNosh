@@ -3,30 +3,24 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestClassifier
 import joblib
 
-# Sample dataset
-data = pd.DataFrame({
-    'age': [20, 25, 30, 35, 40, 45, 22, 28, 32, 38],
-    'goal': ['focus', 'memory', 'anti-stress', 'focus', 'memory', 'anti-stress', 'focus', 'memory', 'anti-stress', 'focus'],
-    'food': ['Dark Chocolate', 'Blueberries', 'Spinach', 'Salmon', 'Walnuts', 'Avocado', 'Dark Chocolate', 'Blueberries', 'Spinach', 'Salmon']
-})
+# Load data
+df = pd.read_csv("data/nutrition_data_with_labels.csv")
 
-# Encode categorical columns
-goal_enc = LabelEncoder()
-food_enc = LabelEncoder()
+# Encode categorical goal labels (you may have multiple goal flag columns)
+df['goal'] = df[['focus_boost','memory_boost','anti_stress']].idxmax(axis=1)
+df['goal_encoded'] = LabelEncoder().fit_transform(df['goal'])
+df['food_encoded'] = LabelEncoder().fit_transform(df['food'])
 
-data['goal_encoded'] = goal_enc.fit_transform(data['goal'])
-data['food_encoded'] = food_enc.fit_transform(data['food'])
+features = ['calories', 'protein', 'fat', 'fiber', 'carbs']
+X = df[features + ['goal_encoded']]
+y = df['food_encoded']
 
-# Train model
-X = data[['age', 'goal_encoded']]
-y = data['food_encoded']
-
-model = RandomForestClassifier()
+model = RandomForestClassifier(n_estimators=100, random_state=42)
 model.fit(X, y)
 
 # Save model and encoders
-joblib.dump(model, 'models/food_model.pkl')
-joblib.dump(goal_enc, 'models/goal_encoder.pkl')
-joblib.dump(food_enc, 'models/food_encoder.pkl')
+joblib.dump(model, "models/food_model.pkl")
+joblib.dump(LabelEncoder().fit(df['goal']), "models/goal_encoder.pkl")
+joblib.dump(LabelEncoder().fit(df['food']), "models/food_encoder.pkl")
 
-print("✅ Model trained and saved.")
+print("Model trained with nutrition features and saved.")
