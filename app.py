@@ -1,25 +1,33 @@
 import streamlit as st
-from recommender import recommend_foods, predict_food
+from recommender import predict_food, recommend_foods
 from utils.nlp_utils import map_text_to_goal
+import pandas as pd
 
-st.set_page_config(page_title="NeuroNosh", layout="centered")
-st.title("🧠 NeuroNosh – Brain Food Recommender")
+st.title("🧠 NeuroNosh – Smarter Brain Food Recommender")
+user_input = st.text_input("How can we help your brain today?")
+age = st.slider("Age", 15, 80, 25)
 
-st.markdown("## 🍽️ What do you want to improve today?")
-user_input = st.text_input("e.g., Help me focus, reduce stress, improve memory...")
-
-age = st.slider("Select your age", 15, 80, 25)
+# Collect nutrition inputs
+st.markdown("### Nutritional Preferences")
+calories = st.number_input("Calories (approx)", 50, 1000, 300)
+protein = st.number_input("Protein (g)", 0.0, 100.0, 5.0)
+fat = st.number_input("Total Fat (g)", 0.0, 100.0, 5.0)
+fiber = st.number_input("Fiber (g)", 0.0, 50.0, 2.0)
+carbs = st.number_input("Carbs (g)", 0.0, 200.0, 20.0)
 
 if user_input:
     goal = map_text_to_goal(user_input)
-
-    st.markdown(f"### 🧠 Based on your age and goal, we recommend:")
-    predicted_food = predict_food(age, goal)
-    st.success(f"**{predicted_food}** ✅")
-
-    st.markdown("### 🥗 Other foods that can help:")
-    results = recommend_foods(goal)
+    nutrition_input = {
+        'calories': calories,
+        'protein': protein,
+        'fat': fat,
+        'fiber': fiber,
+        'carbs': carbs
+    }
+    suggested = predict_food(age, goal, nutrition_input)
+    st.success(f" Based on your goal and nutrition input, try: **{suggested}**")
     
+    st.markdown("### Other options for this goal:")
+    results = recommend_foods(goal)
     for _, row in results.iterrows():
-        st.subheader(row["food"])
-        st.write(f"**Nutrients**: {row['nutrients']}")
+        st.write(f"- **{row['food']}** — Nutrients: {row['nutrients']}")
